@@ -1,7 +1,7 @@
 const { db } = require('./index');
 const { GetAllApplicantsQuery, CreateNewApplicantQuery, GetAllSchemesQuery } = require('./query');
 
-function getAllApplicants() {
+exports.getAllApplicants = () => {
     return new Promise((resolve, reject) => {
         db.all(GetAllApplicantsQuery, [], (err, rows) => {
             if (err) {
@@ -51,7 +51,6 @@ function getAllApplicants() {
     });
 }
 
-module.exports = { getAllApplicants };
 
 
 exports.createApplicant = (data) => {
@@ -65,15 +64,46 @@ exports.createApplicant = (data) => {
     });
 }
 
-exports.getAllSchemes = async () => {
+exports.getAllSchemes = () => {
     return new Promise((resolve, reject) => {
         db.all(GetAllSchemesQuery, [], (err, rows) => {
             if (err) {
-                reject(err);
-            } else {
-                resolve(rows);
+                console.error(err.message);
+                return reject(err);
             }
+
+            const schemesMap = {};
+
+            rows.forEach(row => {
+                if (!schemesMap[row.id]) {
+                    schemesMap[row.id] = {
+                        id: row.id,
+                        name: row.name,
+                        criteria: {
+                            employment_status: row.employment_status === 0 ? 'unemployed' : row.employment_status === 1 ? 'employed' : null,
+                            marital_status: row.marital_status,
+                            has_children: {school_level: "== " + row.child_school_level}
+                        },
+                        benefits: []
+                    };
+                }
+
+                if (row.benefit_id) {
+                    schemesMap[row.id].benefits.push({
+                        id: row.benefit_id,
+                        name: row.benefit,
+                        amount: row.amount
+                    });
+                }
+            });
+
+            const result = Object.values(schemesMap);
+            resolve(result);
         });
     });
 };
+
+exports.getEligibleSchemes = async () => {
+
+}
 
