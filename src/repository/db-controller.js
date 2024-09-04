@@ -1,5 +1,5 @@
 const { db } = require('./index');
-const { GetAllApplicantsQuery, CreateNewApplicantQuery, GetAllSchemesQuery } = require('./query');
+const { GetAllApplicantsQuery, CreateNewApplicantQuery, GetAllSchemesQuery, GetApplicantById} = require('./query');
 
 exports.getAllApplicants = () => {
     return new Promise((resolve, reject) => {
@@ -103,7 +103,84 @@ exports.getAllSchemes = () => {
     });
 };
 
-exports.getEligibleSchemes = async () => {
+exports.getEligibleSchemes = async (id) => {
+    const schemes = await this.getAllSchemes();
 
+    const applicant = await new Promise((resolve, reject) => {
+        db.all(GetApplicantById, [id], (err, datas) => {
+            if (err) {
+                console.error(err.message);
+                return reject(err);
+            } else {
+                // Process the rows to group household members by applicant
+                const applicantsMap = {};
+
+                datas.forEach(row => {
+                    // If the applicant already exists, add the household member to the array
+                    if (applicantsMap[row.id]) {
+                        applicantsMap[row.id].household.push({
+                            id: row.hhperson_id,
+                            name: row.hhperson_name,
+                            relation: row.relation,
+                            employment_status: row.hhperson_employment_status === 1 ? 'employed' : 'unemployed',
+                            sex: row.hhperson_sex === 1 ? 'male' : 'female',
+                            date_of_birth: row.hhperson_date_of_birth
+                        });
+                    } else {
+                        // If the applicant does not exist, create a new entry
+                        applicantsMap[row.id] = {
+                            id: row.id,
+                            name: row.name,
+                            employment_status: row.employment_status === 1 ? 'employed' : 'unemployed',
+                            sex: row.sex === 1 ? 'male' : 'female',
+                            date_of_birth: row.date_of_birth,
+                            household: row.hhperson_id ? [{
+                                id: row.hhperson_id,
+                                name: row.hhperson_name,
+                                relation: row.relation,
+                                employment_status: row.hhperson_employment_status === 1 ? 'employed' : 'unemployed',
+                                sex: row.hhperson_sex === 1 ? 'male' : 'female',
+                                date_of_birth: row.hhperson_date_of_birth,
+                                school_level: row.school_level
+                            }] : []
+                        };
+                    }
+                });
+                resolve(Object.values(applicantsMap)[0]);
+
+            }
+        });
+    });
+
+
+    const eligibleSchemes = schemes.filter(scheme => {
+        const { criteria } = scheme;
+        // Check employment status criteria
+        console.log('applicant',applicant)
+
+        const employmentStatusMatch = criteria.employment_status === null ||
+            criteria.employment_status === applicant.employment_status;
+        console.log('employmentStatusMatch', employmentStatusMatch)
+
+
+        // Check marital status criteria
+        const maritalStatusMatch = criteria.marital_status === null ||
+            criteria.marital_status.toLowerCase() === (applicant.marital_status || '').toLowerCase();
+        console.log('maritalStatusMatch ', maritalStatusMatch)
+
+        // Check has_children criteria
+        let hasChildrenMatch;
+        if (criteria.has_children && applicant.household != undefined) {
+            hasChildrenMatch = applicant.household.some(member => {
+                return member.school_level === 'primary';
+            });
+        }
+        console.log('hasChildrenMatch ', hasChildrenMatch)
+
+
+        // The applicant is eligible if all criteria match
+        return employmentStatusMatch && maritalStatusMatch && hasChildrenMatch;
+    });
+
+    return eligibleSchemes;
 }
-
