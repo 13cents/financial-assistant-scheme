@@ -6,7 +6,7 @@ exports.getAllApplicants = async (req, res) => {
         res.status(200).json({"applicants":applicants});
     } catch (error) {
         console.log(error)
-        res.status(500).json({ error: 'Failed to retrieve applicants' });
+        res.status(500).json({ error: 'Failed to retrieve applicant: ' + error });
     }
 };
 
@@ -23,6 +23,6 @@ exports.createApplicant = async (req, res) => {
         employment_status: boolEmploymentStatus});
         res.status(200).json("Successfully created applicant");
     } catch (error) {
-        res.status(500).json({ error: 'Failed to create applicant' });
+        res.status(500).json({ error: 'Failed to create applicant: ' + error });
     }
 };

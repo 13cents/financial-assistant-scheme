@@ -18,12 +18,9 @@
   },
   "homepage": "https://github.com/13cents/financial-assistant-scheme#readme",
   "dependencies": {
-    "@sequelize/sqlite3": "^7.0.0-alpha.41",
     "express": "^4.19.2",
-    "sequelize": "^6.37.3",
-    "sqlite3": "^5.1.7"
-  },
-  "devDependencies": {
-    "sequelize-cli": "^6.6.2"
+    "sqlite3": "^5.1.7",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   }
 }

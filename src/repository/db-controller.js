@@ -84,7 +84,8 @@ exports.getAllSchemes = () => {
                         criteria: {
                             employment_status: row.employment_status === 0 ? 'unemployed' : row.employment_status === 1 ? 'employed' : null,
                             marital_status: row.marital_status,
-                            has_children: {school_level: "== " + row.child_school_level}
+                            has_children: {school_level: "== " + row.child_school_level},
+                            requires_children: row.requires_children
                         },
                         benefits: []
                     };
@@ -171,11 +172,18 @@ exports.getEligibleSchemes = async (id) => {
         console.log('maritalStatusMatch ', maritalStatusMatch)
 
         // Check has_children criteria
-        let hasChildrenMatch;
-        if (criteria.has_children && applicant.household != undefined) {
-            hasChildrenMatch = applicant.household.some(member => {
-                return member.school_level === 'primary';
-            });
+        let hasChildrenMatch = true;
+        if (criteria.requires_children) {
+            hasChildrenMatch = false;
+            if (applicant.household.length>0) {
+                hasChildrenMatch = applicant.household.some(member => {
+                    console.log('member.school_level',member.school_level);
+                    console.log('criteria.school_level',criteria.school_level);
+                    return member.school_level === criteria.school_level;
+                });
+            }
+            console.log('hasChildrenMatch',hasChildrenMatch);
+
         }
         console.log('hasChildrenMatch ', hasChildrenMatch)
 
@@ -199,12 +207,16 @@ exports.getAllApplications = () => {
 };
 
 exports.createApplication = (data) => {
-    db.run(CreateNewApplicationQuery, [data.applicant_id, data.scheme_id, 'pending', data.remarks], (err) => {
-        if (err) {
-            console.error(err.message);
-            return err;
-        } else {
-            return;
-        }
+    return new Promise((resolve, reject) => {
+        db.run(CreateNewApplicationQuery, [data.applicant_id, data.scheme_id, 'pending', data.remarks], function (err) {
+            if (err) {
+                console.error(err.message);
+                reject(new Error(err.message));
+            } else {
+                resolve(this.lastID);
+            }
+        });
     });
-}
+};
+
+
