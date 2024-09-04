@@ -1,5 +1,7 @@
 const { db } = require('./index');
-const { GetAllApplicantsQuery, CreateNewApplicantQuery, GetAllSchemesQuery, GetApplicantById} = require('./query');
+const { GetAllApplicantsQuery, CreateNewApplicantQuery, GetAllSchemesQuery, GetApplicantById, GetAllApplicationsQuery,
+    CreateNewApplicationQuery
+} = require('./query');
 
 exports.getAllApplicants = () => {
     return new Promise((resolve, reject) => {
@@ -155,9 +157,9 @@ exports.getEligibleSchemes = async (id) => {
 
     const eligibleSchemes = schemes.filter(scheme => {
         const { criteria } = scheme;
-        // Check employment status criteria
-        console.log('applicant',applicant)
+        // console.log('applicant',applicant)
 
+        // Check employment status criteria
         const employmentStatusMatch = criteria.employment_status === null ||
             criteria.employment_status === applicant.employment_status;
         console.log('employmentStatusMatch', employmentStatusMatch)
@@ -177,10 +179,32 @@ exports.getEligibleSchemes = async (id) => {
         }
         console.log('hasChildrenMatch ', hasChildrenMatch)
 
-
-        // The applicant is eligible if all criteria match
         return employmentStatusMatch && maritalStatusMatch && hasChildrenMatch;
     });
 
     return eligibleSchemes;
+}
+
+exports.getAllApplications = () => {
+    return new Promise((resolve, reject) => {
+        db.all(GetAllApplicationsQuery, [], (err, rows) => {
+            if (err) {
+                console.error(err.message);
+                return reject(err);
+            }
+
+            resolve(rows);
+        });
+    });
+};
+
+exports.createApplication = (data) => {
+    db.run(CreateNewApplicationQuery, [data.applicant_id, data.scheme_id, 'pending', data.remarks], (err) => {
+        if (err) {
+            console.error(err.message);
+            return err;
+        } else {
+            return;
+        }
+    });
 }
