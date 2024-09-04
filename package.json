@@ -1,0 +1,26 @@
+{
+  "name": "financial-assistant-scheme",
+  "version": "1.0.0",
+  "description": "This project is a backend solution for managing financial assistance schemes for needy individuals and families. The system allows administrators to manage applicants, schemes, and applications, and determine the eligibility of applicants for various financial assistance schemes.",
+  "main": "app.js",
+  "scripts": {
+    "test": "npx jest",
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/13cents/financial-assistant-scheme.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/13cents/financial-assistant-scheme/issues"
+  },
+  "homepage": "https://github.com/13cents/financial-assistant-scheme#readme",
+  "dependencies": {
+    "express": "^4.19.2",
+    "sqlite3": "^5.1.7",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  }
+}
